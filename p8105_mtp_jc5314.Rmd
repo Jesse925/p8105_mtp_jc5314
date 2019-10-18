@@ -1,0 +1,11 @@
+---
+title: "P8105 Midterm Project"
+author: "Junxian Chen (jc5314)"
+date: "10/18/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
