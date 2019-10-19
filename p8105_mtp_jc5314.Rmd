@@ -210,7 +210,9 @@ EEOP_plot =
 
 
 ```{r}
-FHP_plot / EEOP_plot  # create a two-panel figure
+# create a two-panel figure and show the plot
+
+FHP_plot / EEOP_plot
 ```
 
 
@@ -221,6 +223,10 @@ fhp_eop_plot =
   filter(eop_size_mm != 0) %>% 
   ggplot(aes(x = fhp_size_mm, y = eop_size_mm, color = sex)) +
   geom_point() +
+  geom_smooth(
+    method = "lm", 
+    color = 'black',
+    se = FALSE) +
   facet_grid(
     sex ~ age_group, 
     labeller = as_labeller(c('0' = 'Female', '1' = 'Male', '2' = '18-29 years', 
@@ -230,6 +236,8 @@ fhp_eop_plot =
   scale_color_hue(
     name = "Sex", 
     labels = c("Females", "Males"))
+
+# show the plot
 
 fhp_eop_plot
 ```
