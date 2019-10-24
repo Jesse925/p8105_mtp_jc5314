@@ -5,13 +5,7 @@ date: "10/18/2019"
 output: github_document
 ---
 
-# Introduction:
-
-# Problem 1
-
-Load the R packages:
-
-```{r, include=FALSE}
+```{r, include = FALSE}
 library(readxl)
 library(tidyverse)
 library(patchwork)
@@ -27,13 +21,18 @@ knitr::opts_chunk$set(
 theme_set(theme_gray(base_size = 10) + theme(legend.position = "bottom"))
 ```
 
-Load, clean and tidy the dataset (the raw dataset and the dataset after cleaning were seperated so that we can go back and check the raw data when possible mistakes were found):
+## Introduction:
+
+An article was published on Nature Scientific Reports in 2018 which describing relationship between forward head protraction (FHP) and enlarged external occipital protuberance (EEOP). The researchers analyzed data from people with different ages and sex, and pointed out that the prominent exostosis were more substantial and prevalent in young adults than older groups. However, people were skeptical about this study and a published author correction  indicated that errors or defects existed in the original work. In this project, the data that accompany the author correction from this study are used to test if mistakes are still exist and to exam whether the results are consistent with that reported in the article.
+
+## Section 1: Dataset
+
+### 1.1 Dataset Description
 
 ```{r}
 raw_data = 
   read_excel("./data/p8105_mtp_data.xlsx", skip = 8)
 ```
-
 
 ```{r}
 mtp_data =   
@@ -43,13 +42,22 @@ mtp_data =
   mutate(
     sex = as.character(sex),
     age = as.integer(age),
-    age_group = factor(age_group, levels = c('1', '2', '3', '4', '5', '6', '7', '8')),
+    age_group = case_when(
+      age_group %in% c('6', '7', '8') ~ '6+', 
+      TRUE ~ age_group ),
+    age_group = factor(age_group, levels = c('1', '2', '3', '4', '5', '6+')),
     eop_size = factor(eop_size, levels = c('0', '1', '2', '3', '4', '5')),
     eop_visibility_classification = factor(eop_visibility_classification, levels = c('0', '1', '2')),
     eop_shape = as.character(eop_shape),
     fhp_category = factor(fhp_category, levels = c('0', '1', '2', '3', '4', '5', '6', '7'))
   )
+
+str(mtp_data)
 ```
+
+The raw dataset was imported and cleaned. (Because the raw dataset would be used later to illustrate mistakes, the process of importing and cleaning were seperated here). In the data cleaning, missing values were filled according to the header information, variable types were modified, and orders were given to the factor variables. Since the article used all individuls older than 60 as a whole '>60' group, those people were all assigned as '6+' under the `age_group` variables here to facilitate furthur analyses.  
+
+After data cleaning, the resulting dataset, named `mtp_data`, contains `r nrow(mtp_data)` observations (i.e. the number of participants) and `r ncol(mtp_data)` variables.  
 
 
 ```{r}
@@ -61,7 +69,7 @@ mtp_data %>%
       age_group == '3' ~ '31-40',
       age_group == '4' ~ '41-50',
       age_group == '5' ~ '51-60',
-      age_group %in% c('6', '7', '8') ~ 'larger than 60'
+      age_group == '6+' ~ 'larger than 60'
     )
   ) %>% 
   group_by(sex, age_group) %>% 
@@ -75,10 +83,8 @@ mtp_data %>%
   )
 ```
 
-Dataset description:
 
-
-Issues in the dataset:
+### 1.2 Issues Noticed in Dataset:
 
 (1) One mistake in the age group '1'.
 
@@ -89,7 +95,11 @@ mtp_data %>%
   geom_hline(yintercept = c(18, 31, 41, 51, 61), color = 'red', linetype = 'dotted') + 
   xlab('Age Group') +
   ylab('Age (years)') +
-  scale_color_hue(name = "age group")
+  scale_color_hue(name = "age group") +
+  scale_x_discrete(
+    labels = c("<18's", "18-29 years","30's", "40's", "50's", ">60's")) +
+  scale_color_hue(name = "age group",
+                  labels = c("<18's", "18-29 years","30's", "40's", "50's", ">60's"))
 ```
 
 (2)
@@ -101,7 +111,7 @@ mtp_data %>%
   geom_hline(yintercept = c(5, 10, 15, 20, 25), color = 'red', linetype = 'dotted') + 
   xlab('EOP Size Group') +
   ylab('EOP Size (mm)') +
-  scale_color_hue(name = "age group")
+  scale_color_hue(name = "eop size group")
 ```
 
 Lots of mistakes in the classification in EOP size. Also, the 'NA' in the plots indicates a mistake value in EOP size grouping:
@@ -142,20 +152,12 @@ raw_data[row_na,] %>%
   knitr::kable()
 ```
 
-# Problem 2
-
-```{r}
-plot_df = 
-  mtp_data %>% 
-  mutate(
-    age_group = factor(age_group, labels = c('1', '2', '3', '4', '5', '6', '6', '6')),
-    droplevels(age_group)) %>% 
-  filter(age_group != '1')
-```
+## Section 2: Visualization Improvement
 
 ```{r}
 fhp_plot =
-  plot_df %>% 
+  mtp_data %>% 
+  filter(age_group != '1') %>% 
   drop_na(fhp_size_mm) %>% 
   ggplot(aes(x = age_group, y = fhp_size_mm, fill = sex)) +
   geom_boxplot() +
@@ -185,7 +187,8 @@ fhp_plot =
 
 ```{r}
 eeop_plot = 
- plot_df %>% 
+  mtp_data %>% 
+  filter(age_group != '1') %>% 
   mutate(
     eeop = case_when(
       eop_size_mm > 10 ~ 'y',
@@ -218,7 +221,8 @@ fhp_plot / eeop_plot
 
 ```{r}
 fhp_eop_plot = 
-  plot_df %>% 
+  mtp_data %>% 
+  filter(age_group != '1') %>% 
   drop_na(fhp_size_mm) %>% 
   filter(eop_size_mm != 0) %>% 
   ggplot(aes(x = fhp_size_mm, y = eop_size_mm, color = sex)) +
@@ -243,7 +247,7 @@ fhp_eop_plot
 ```
 
 
-# Problem 3
+## Section 3: Reproducing reported results
 
 Are the authors’ stated sample sizes in each age group consistent with the data you have available? Ans:No.
 
@@ -292,33 +296,43 @@ FHP is noted to be more common in older subjects, with “FHP >40 mm observed fr
 
 ```{r}
 p1 = 
-plot_df %>% 
+  mtp_data %>% 
+  filter(age_group != '1') %>% 
   drop_na(fhp_category) %>% 
   ggplot(aes(x = age_group, y = fhp_size_mm)) +
-  geom_violin()
+  geom_violin() +
+  xlab('Age Group') +
+  ylab('FHP Size (mm)') +
+  scale_x_discrete(
+    labels = c("18-29 years","30's", "40's", "50's", ">60's"))
   
 p2 = 
-plot_df %>% 
+  mtp_data %>% 
+  filter(age_group != '1') %>% 
   drop_na(fhp_category) %>% 
   group_by(age_group) %>% 
   count(fhp_category) %>% 
   mutate(rate = prop.table(n)) %>%  
   ggplot(aes(x = fhp_category, y = rate)) +
   geom_col() +
-  facet_grid(~age_group)
+  xlab('FHP Categroy') +
+  ylab('Rate') +
+  facet_grid(~age_group) 
 
 p1 / p2
 
-plot_df %>% 
+mtp_data %>% 
+  filter(age_group != '1') %>% 
+  drop_na(fhp_category) %>% 
   group_by(age_group) %>% 
   count(fhp_category) %>% 
   mutate(rate = prop.table(n)) %>%
-  filter(age_group == '6' & fhp_category %in% c('4', '5', '6', '7')) %>% 
+  filter(age_group == '6+' & fhp_category %in% c('4', '5', '6', '7')) %>% 
   summarize(sum = sum(rate))
 ```
 
 
-# Problem 4
+## Section 4: Summary and Discussions
 
 Summarize your results, the quality of the data analysis / presentation of results in the original report, and comment on the conclusions of the reports’ authors. Do you think the data provide evidence that cell phones are causing horn growth? What other data would you like to have to address this hypothesis?
 
