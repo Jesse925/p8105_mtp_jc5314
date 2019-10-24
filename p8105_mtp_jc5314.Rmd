@@ -154,7 +154,7 @@ plot_df =
 ```
 
 ```{r}
-FHP_plot =
+fhp_plot =
   plot_df %>% 
   drop_na(fhp_size_mm) %>% 
   ggplot(aes(x = age_group, y = fhp_size_mm, fill = sex)) +
@@ -184,7 +184,7 @@ FHP_plot =
 
 
 ```{r}
-EEOP_plot = 
+eeop_plot = 
  plot_df %>% 
   mutate(
     eeop = case_when(
@@ -212,7 +212,7 @@ EEOP_plot =
 ```{r}
 # create a two-panel figure and show the plot
 
-FHP_plot / EEOP_plot
+fhp_plot / eeop_plot
 ```
 
 
@@ -242,6 +242,85 @@ fhp_eop_plot =
 fhp_eop_plot
 ```
 
+
+# Problem 3
+
+Are the authors’ stated sample sizes in each age group consistent with the data you have available? Ans:No.
+
+```{r}
+mtp_data %>% 
+  group_by(age_group) %>% 
+  summarize(n = n()) %>% 
+  knitr::kable()
+
+mtp_data %>% 
+  nrow()
+```
+
+
+Are the reported mean and standard deviations for FHP size consistent with the data you have available? Ans:Yes.
+
+```{r}
+mean(pull(mtp_data, fhp_size_mm), na.rm = TRUE)
+
+mtp_data %>% 
+  group_by(sex) %>% 
+  summarize(
+    maen = mean(fhp_size_mm, na.rm = TRUE), 
+    sd = sd(fhp_size_mm, na.rm = TRUE))
+```
+
+
+The authors find “the prevalence of EEOP to be 33% of the study population”. What is the definition of EEOP, and what variables can you use to evaluate this claim? Is the finding consistent with the data available to you?
+
+Ans: Those bony outgrowths were named enlarged EOP (EEOP) only when they have exceeded 10 mm in size, use variable eop_size_mm. Yes.(1% difference)
+
+```{r}
+mtp_data %>% 
+  mutate(
+    eeop = case_when(
+      eop_size_mm > 10 ~ 'y',
+      eop_size_mm <= 10 ~ 'n'
+    )
+  ) %>% 
+  count(eeop) %>%
+  mutate(rate = prop.table(n))
+```
+
+
+FHP is noted to be more common in older subjects, with “FHP >40 mm observed frequently (34.5%) in the over 60s cases”. Are the broad trends and specific values consistent with your data? Ans: Yes. No.
+
+```{r}
+p1 = 
+plot_df %>% 
+  drop_na(fhp_category) %>% 
+  ggplot(aes(x = age_group, y = fhp_size_mm)) +
+  geom_violin()
+  
+p2 = 
+plot_df %>% 
+  drop_na(fhp_category) %>% 
+  group_by(age_group) %>% 
+  count(fhp_category) %>% 
+  mutate(rate = prop.table(n)) %>%  
+  ggplot(aes(x = fhp_category, y = rate)) +
+  geom_col() +
+  facet_grid(~age_group)
+
+p1 / p2
+
+plot_df %>% 
+  group_by(age_group) %>% 
+  count(fhp_category) %>% 
+  mutate(rate = prop.table(n)) %>%
+  filter(age_group == '6' & fhp_category %in% c('4', '5', '6', '7')) %>% 
+  summarize(sum = sum(rate))
+```
+
+
+# Problem 4
+
+Summarize your results, the quality of the data analysis / presentation of results in the original report, and comment on the conclusions of the reports’ authors. Do you think the data provide evidence that cell phones are causing horn growth? What other data would you like to have to address this hypothesis?
 
 
 
