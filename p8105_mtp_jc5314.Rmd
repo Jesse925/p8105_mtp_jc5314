@@ -13,6 +13,7 @@ library(patchwork)
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
+  message = FALSE,
 	fig.width = 8, 
   fig.height = 6,
   out.width = "90%"
@@ -57,9 +58,9 @@ mtp_data =
 str(mtp_data)
 ```
 
-In the data cleaning, missing values were filled based on given information, variable types were modified, and orders were given to factor variables. Individuals older than 60 were all assigned as '6+' under the `age_group` variables to facilitate further analyses. Because the raw data would be used later to illustrate mistakes, the process of importing and cleaning were separated here.
+In the data cleaning, missing values were filled based on given information, variable types were modified and orders were given to factor variables. Individuals older than 60 were all assigned as '6+' under the `age_group` variables to facilitate further analyses. 
 
-The resulting dataset `mtp_data` contains `r nrow(mtp_data)` observations (i.e. the number of participants) and `r ncol(mtp_data)` variables. Key variables: The average **age** was `r mean(pull(mtp_data, age))`. The average **EOP size** was `r mean(pull(mtp_data, eop_size_mm))` mm. The average **FHP size** was `r mean(pull(mtp_data, fhp_size_mm), na.rm = TRUE)` mm. `NA` exist in the `fhp_size_mm` and `eop_shape`. Since no information was provided, the `NA`'s here were left blank.
+The resulting dataset `mtp_data` contains `r nrow(mtp_data)` observations (i.e. the number of participants) and `r ncol(mtp_data)` variables. Key variables: The average **age** was `r mean(pull(mtp_data, age))`. The average **EOP size** was `r mean(pull(mtp_data, eop_size_mm))` mm. The average **FHP size** was `r mean(pull(mtp_data, fhp_size_mm), na.rm = TRUE)` mm. `NA` exist in the `fhp_size_mm` and `eop_shape`. Since no information was provided, `NA`'s here were left blank.
 
 A table below shows the age and gender distribution.
 
@@ -86,7 +87,7 @@ mtp_data %>%
   )
 ```
 
-### 1.2 Issues:
+### 1.2 Issues
 
 ```{r}
 mtp_data %>% 
@@ -114,7 +115,7 @@ mtp_data %>%
   scale_color_hue(name = "eop size group")
 ```
 
-* Misclassifications in EOP size group, especially in group 1, 3, 4, 5. 
+* Misclassifications existed in EOP size group, especially in group 1, 3, 4, 5. 
 
 ```{r}
 row_na = which(is.na(pull(mtp_data, eop_size)))
@@ -122,7 +123,7 @@ raw_data[row_na,] %>%
   knitr::kable()
 ```
 
-The `NA` in x-axis is due to an abnormal value '14.6' in 'EOP size' in raw dataset which supposed to be 0 ~ 5.
+The `NA` in x-axis was due to an abnormal value '14.6' in 'EOP size' in raw dataset which supposed to be 0 ~ 5.
 
 ```{r}
 mtp_data %>% 
@@ -134,7 +135,7 @@ mtp_data %>%
   scale_color_hue(name = "EOP visibility classification")
 ```
 
-* Misclassifications exist in all three groups in EOP visibility classification.
+* Misclassifications existed in all three groups in EOP visibility classification.
 
 ```{r}
 mtp_data %>% 
@@ -146,7 +147,7 @@ mtp_data %>%
   scale_color_hue(name = "FHP size group")
 ```
 
-* Misclassifications exist in FHP size group, especially in group 1, 2, 4. 
+* Misclassifications existed in FHP size group, especially in group 1, 2, 4. 
 
 ```{r}
 row_na = which(is.na(pull(mtp_data, fhp_category)))
@@ -154,7 +155,7 @@ raw_data[row_na,] %>%
   knitr::kable()
 ```
 
-The `NA` in the x-axis is due to an abnormal value '30.8' in 'FHP Category' in raw dataset which supposed to be 0 ~ 7.
+The `NA` in the x-axis was due to an abnormal value '30.8' in 'FHP Category' in raw dataset which supposed to be 0 ~ 7.
 
 
 ## 2. Visualization Improvement
@@ -319,7 +320,8 @@ mtp_data %>%
   )
 ```
 
-* Bony outgrowths were named as EEOP when they exceeded 10 mm in size. Variable used to evaluate the prevalence of EEOP was `eop_size_mm`. The EEOP prevalence from available data was 32%, which has 1% difference from what authors reported.
+* EEOP: When bony outgrowths exceeded 10 mm in size. 
+* Variable used to evaluate the prevalence of EEOP was `eop_size_mm`. The EEOP prevalence from available data was 32%, which has 1% difference from what authors reported.
 
 ```{r}
 fhp_violin = 
@@ -361,9 +363,8 @@ mtp_data %>%
   )
 ```
 
-* In older age group, more people had higher FHP size and the percentages of large-FHP categories also increased. Thus, the broad trends are consistent with that in the article. However, based on available data, the percentage that FHP >40 mm observed is 32.5%, which is not consistent with the article.  
+* In older age group, more people had higher FHP size and the percentages of large-FHP categories increased. Thus, the broad trends are consistent with the article. However, based on available data, the percentage of FHP >40 mm observed is 32.5%, which is not consistent with the article.  
 
 ## 4. Discussions
 
-Based on the available data, lots of misclassification were found in category variables and mistakes were found in data entry, which made the data analyses in original report questionable. Some presentations of results also lacked important information. Besides, some statistical values were found not consistent with that reported in the article. Although board trends were consistent with the article that younger individuals had higher EEOP rates, we still cannot conclude cell phones cause hron growth. Extra data showing the prevalence of cell-phones usage among different age groups will be necessary to better address such hypothesis. 
-
+Based on the available data, lots of misclassification were found in category variables and mistakes were found in data entry, which made the data analyses in original report questionable. Besides, some statistical values were found not consistent with that reported in the article. Although board trends were consistent with the article that younger individuals had higher EEOP rates, we still cannot conclude cell phones cause hron growth. Extra data showing the prevalence of cell-phones usage among different age groups will be necessary to better address such hypothesis. 
