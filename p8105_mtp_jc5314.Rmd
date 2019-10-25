@@ -175,7 +175,7 @@ fhp_plot =
   stat_summary(
     fun.data = mean_se, 
     geom = "errorbar",
-    width = 0.08,
+    width = 0.15,
     position = position_dodge(width = 0.75)) +
   scale_fill_hue(
     name = "Sex", 
@@ -223,6 +223,8 @@ eeop_plot =
 fhp_plot / eeop_plot
 ```
 
+In the upper panel, mean value equals to median in most of the age groups, indicating a non-skewed distributions. Also, the males had relatively larger FHP size than females. From the lower panel, overall trend of EEOP rate decreased first and then increased. It had largest rate in 18-29 years group and lowest rate in 40's group. Also, EEOP rate in males higher than that in females at all age groups.
+
 
 ```{r}
 fhp_eop_plot = 
@@ -239,65 +241,78 @@ fhp_eop_plot =
   facet_grid(
     sex ~ age_group, 
     labeller = as_labeller(c('0' = 'Female', '1' = 'Male', '2' = '18-29 years', 
-                             '3' = "30's", '4' = "40's", '5' = "50's", '6' = ">60's"))) +
+                             '3' = "30's", '4' = "40's", '5' = "50's", '6+' = ">60's"))) +
   xlab('FHP Size (mm)') +
   ylab('EOP Size (mm)') +
   scale_color_hue(
     name = "Sex", 
     labels = c("Females", "Males"))
 
-# show the plot
-
 fhp_eop_plot
 ```
+
+In male group, the EOP size and FHP size had slightly positive relationships in all age groups. However, in female group, the relationships were not indentical among age groups.
 
 
 ## 3. Reproducing reported results
 
-Are the authors’ stated sample sizes in each age group consistent with the data you have available? Ans:No.
-
 ```{r}
 mtp_data %>% 
+  mutate(
+    age_group = case_when(
+      age_group == '1' ~ 'less than 18',
+      age_group == '2' ~ '18-30',
+      age_group == '3' ~ '31-40',
+      age_group == '4' ~ '41-50',
+      age_group == '5' ~ '51-60',
+      age_group == '6+' ~ 'larger than 60'
+    )
+  ) %>% 
   group_by(age_group) %>% 
   summarize(n = n()) %>% 
-  knitr::kable()
-
-mtp_data %>% 
-  nrow()
+  knitr::kable(
+    col.names = c('Age Group', 'Sample Size')
+  )
 ```
 
-
-Are the reported mean and standard deviations for FHP size consistent with the data you have available? Ans:Yes.
+* Sample sizes in each age group from available data were not consistent with authors' stated.
 
 ```{r}
+# overall mean
+
 mean(pull(mtp_data, fhp_size_mm), na.rm = TRUE)
+
+# mean and std by sex group
 
 mtp_data %>% 
   group_by(sex) %>% 
   summarize(
     maen = mean(fhp_size_mm, na.rm = TRUE), 
-    sd = sd(fhp_size_mm, na.rm = TRUE))
+    sd = sd(fhp_size_mm, na.rm = TRUE)
+  ) %>% 
+  knitr::kable(
+    col.names = c('Sex', 'Mean', 'Standard Deviation')
+  ) 
 ```
 
-
-The authors find “the prevalence of EEOP to be 33% of the study population”. What is the definition of EEOP, and what variables can you use to evaluate this claim? Is the finding consistent with the data available to you?
-
-Ans: Those bony outgrowths were named enlarged EOP (EEOP) only when they have exceeded 10 mm in size, use variable eop_size_mm. Yes.(1% difference)
+* Reported mean and standard deviations for FHP size were consistent with that in avaliable data.
 
 ```{r}
 mtp_data %>% 
   mutate(
     eeop = case_when(
-      eop_size_mm > 10 ~ 'y',
-      eop_size_mm <= 10 ~ 'n'
+      eop_size_mm > 10 ~ 'EEOP',
+      eop_size_mm <= 10 ~ 'Not EEOP'
     )
   ) %>% 
   count(eeop) %>%
-  mutate(rate = prop.table(n))
+  mutate(rate = prop.table(n)) %>% 
+  knitr::kable(
+    col.names = c('EEOP or not', 'Number', 'Prevalence')
+  )
 ```
 
-
-FHP is noted to be more common in older subjects, with “FHP >40 mm observed frequently (34.5%) in the over 60s cases”. Are the broad trends and specific values consistent with your data? Ans: Yes. No.
+* Those bony outgrowths were named as EEOP when they have exceeded 10 mm in size. Variable used to evalute the prevalence of EEOP was `eop_size_mm`. The EEOP prevalence from avaliable data is 32%, which has 1% difference from what authors reported.
 
 ```{r}
 p1 = 
@@ -321,7 +336,7 @@ p2 =
   ggplot(aes(x = fhp_category, y = rate)) +
   geom_col() +
   xlab('FHP Categroy') +
-  ylab('Rate') +
+  ylab('Percentage') +
   facet_grid(~age_group) 
 
 p1 / p2
@@ -333,9 +348,13 @@ mtp_data %>%
   count(fhp_category) %>% 
   mutate(rate = prop.table(n)) %>%
   filter(age_group == '6+' & fhp_category %in% c('4', '5', '6', '7')) %>% 
-  summarize(sum = sum(rate))
+  summarize(sum = sum(rate)) %>% 
+  knitr::kable(
+    col.names = c('Age Group', 'Percentage of FHP >40 mm')
+  )
 ```
 
+* From the two-panel polt, it can be seen that in older age group, more people had higher FHP size and percentages of large-FHP categroies increased in older age group. Thus, the broad trends are consistent with our avaliable data. However, based on avaliable data, the percentage that FHP >40 mm observed is 32.5%, which is not consistent with what reported in the article.  
 
 ## 4. Summary and Discussions
 
