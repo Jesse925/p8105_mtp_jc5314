@@ -223,7 +223,9 @@ eeop_plot =
 fhp_plot / eeop_plot
 ```
 
-In the upper panel, mean value equals to median in most of the age groups, indicating a non-skewed distributions. Also, the males had relatively larger FHP size than females. From the lower panel, overall trend of EEOP rate decreased first and then increased. It had largest rate in 18-29 years group and lowest rate in 40's group. Also, EEOP rate in males higher than that in females at all age groups.
+In the upper panel, mean value equals to median in most of the age groups, indicating a non-skewed distributions in those data. For females in 30's, 50's, >60's group, the data distributions were right-skewed. Also, the males had relatively larger FHP size than females. 
+
+From the lower panel, overall trend of EEOP rate decreased first and then increased. It had largest rate in 18-29 years group and lowest rate in 40's group. Also, EEOP rate in males higher than that in females at all age groups.
 
 
 ```{r}
@@ -254,7 +256,7 @@ fhp_eop_plot
 In male group, the EOP size and FHP size had slightly positive relationships in all age groups. However, in female group, the relationships were not indentical among age groups.
 
 
-## 3. Reproducing reported results
+## 3. Reproduce Reported Results
 
 ```{r}
 mtp_data %>% 
@@ -285,13 +287,19 @@ mean(pull(mtp_data, fhp_size_mm), na.rm = TRUE)
 # mean and std by sex group
 
 mtp_data %>% 
+  mutate(
+    sex = case_when(
+      sex == '0' ~ 'Female',
+      sex == '1' ~ 'Male'
+    )
+  ) %>%
   group_by(sex) %>% 
   summarize(
     maen = mean(fhp_size_mm, na.rm = TRUE), 
     sd = sd(fhp_size_mm, na.rm = TRUE)
   ) %>% 
   knitr::kable(
-    col.names = c('Sex', 'Mean', 'Standard Deviation')
+    col.names = c('Sex', 'Mean (FHP size)', 'Standard Deviation (FHP size)')
   ) 
 ```
 
@@ -315,7 +323,7 @@ mtp_data %>%
 * Those bony outgrowths were named as EEOP when they have exceeded 10 mm in size. Variable used to evalute the prevalence of EEOP was `eop_size_mm`. The EEOP prevalence from avaliable data is 32%, which has 1% difference from what authors reported.
 
 ```{r}
-p1 = 
+fhp_violin = 
   mtp_data %>% 
   filter(age_group != '1') %>% 
   drop_na(fhp_category) %>% 
@@ -326,7 +334,7 @@ p1 =
   scale_x_discrete(
     labels = c("18-29 years","30's", "40's", "50's", ">60's"))
   
-p2 = 
+fhp_col = 
   mtp_data %>% 
   filter(age_group != '1') %>% 
   drop_na(fhp_category) %>% 
@@ -339,7 +347,7 @@ p2 =
   ylab('Percentage') +
   facet_grid(~age_group) 
 
-p1 / p2
+fhp_violin / fhp_col
 
 mtp_data %>% 
   filter(age_group != '1') %>% 
@@ -356,9 +364,7 @@ mtp_data %>%
 
 * From the two-panel polt, it can be seen that in older age group, more people had higher FHP size and percentages of large-FHP categroies increased in older age group. Thus, the broad trends are consistent with our avaliable data. However, based on avaliable data, the percentage that FHP >40 mm observed is 32.5%, which is not consistent with what reported in the article.  
 
-## 4. Summary and Discussions
+## 4. Discussions
 
-Summarize your results, the quality of the data analysis / presentation of results in the original report, and comment on the conclusions of the reports’ authors. Do you think the data provide evidence that cell phones are causing horn growth? What other data would you like to have to address this hypothesis?
-
-
+Based on the avaliable data, we found lots of misclassification exist in the category variables and mistakes in data entry, which make the data analyses in the original report questionable. Some presentations of results also lack important information. Besides, some statistical values including sample size are found not consistent with that reported in the article. Although the board trends consistent with the article that younger individuals have higer EEOP rates, we still cannot conclude cell phones cause hron growth. Extra data about the prevalence of cell-phones usage among different age groups will be necessary to better address such hypothesis. 
 
